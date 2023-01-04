@@ -1,8 +1,16 @@
-var express = require('express');
-var router = express.Router();
-let clientsCtrl = require('../controllers/clients')
+import express from "express";
+import {
+  getProducts,
+  getCustomers,
+  getTransactions,
+  getGeography,
+} from "../controllers/client.js";
 
-/* GET home page. */
-router.get('/', clientsCtrl);
+const router = express.Router();
 
-module.exports = router;
+router.get("/products", getProducts);
+router.get("/customers", getCustomers);
+router.get("/transactions", getTransactions);
+router.get("/geography", getGeography);
+
+export default router;

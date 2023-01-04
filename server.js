@@ -1,59 +1,64 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-// var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-let bodyParser = require('body-parser')
-let mongoose =require('mongoose')
-let cors = require('cors')
-let dotenv = require('dotenv')
-let helmet = require('helmet')
-let morgan = require('morgan')
-var clientRoutes = require('./routes/client');
-var generalRoutes = require('./routes/general');
-var managementRoutes = require('./routes/management');
-var salesRoutes = require('./routes/sales');
+import express from "express";
+import bodyParser from "body-parser";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import morgan from "morgan";
+import clientRoutes from "./routes/client.js";
+import generalRoutes from "./routes/general.js";
+import managementRoutes from "./routes/management.js";
+import salesRoutes from "./routes/sales.js";
 
-require('dotenv').config()
-require('./config/database')
+// data imports
+import User from "./models/User.js";
+import Product from "./models/Product.js";
+import ProductStat from "./models/ProductStat.js";
+import Transaction from "./models/Transaction.js";
+import OverallStat from "./models/OverallStat.js";
+import AffiliateStat from "./models/AffiliateStat.js";
+import {
+  dataUser,
+  dataProduct,
+  dataProductStat,
+  dataTransaction,
+  dataOverallStat,
+  dataAffiliateStat,
+} from "./data/index.js";
 
-var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-app.use(logger('dev'));
+/* CONFIGURATION */
+dotenv.config();
+const app = express();
 app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
-app.use(helmet.crossOriginResourcePolicy({policy: 'cross-origin'}));
-app.use(morgan('common'))
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(morgan("common"));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
-app.use('/client', clientRoutes);
-app.use('/general', generalRoutes);
-app.use('/management', managementRoutes);
-app.use('/sales', salesRoutes)
+/* ROUTES */
+app.use("/client", clientRoutes);
+app.use("/general", generalRoutes);
+app.use("/management", managementRoutes);
+app.use("/sales", salesRoutes);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+/* MONGOOSE SETUP */
+const PORT = process.env.PORT || 9000;
+mongoose
+  .connect(process.env.MONGO_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server Port: ${PORT}`));
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+    /* ONLY ADD DATA ONE TIME */
+    // AffiliateStat.insertMany(dataAffiliateStat);
+    // OverallStat.insertMany(dataOverallStat);
+    // Product.insertMany(dataProduct);
+    // ProductStat.insertMany(dataProductStat);
+    // Transaction.insertMany(dataTransaction);
+    // User.insertMany(dataUser);
+  })
+  .catch((error) => console.log(`${error} did not connect`));
